@@ -13,6 +13,7 @@ namespace LR {
 
 class Window {
 public:
+	Window() = default;
 	Window(const glm::vec2& size, SDL_WindowFlags flags, const char* title);
 	~Window();
 

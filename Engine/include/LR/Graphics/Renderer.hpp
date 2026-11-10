@@ -1,13 +1,16 @@
 #ifndef LRRENDERER_HPP
 #define LRRENDERER_HPP
 
-#include "VulkanAPI.hpp"
+#include "Vulkan/VulkanAPI.hpp"
+#include "../Core.hpp"
+
 
 namespace LR {
 
 // Factory for rendering APIs
 class Renderer {
 public:
+	Renderer() = default;
 	Renderer(API_TYPE Type);
 	~Renderer();
 
