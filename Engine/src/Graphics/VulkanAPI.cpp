@@ -1,9 +1,15 @@
-#include <LREngine.hpp>
+#include "LR/Graphics/VulkanAPI.hpp"
+
 #include <SDL3/SDL_vulkan.h>
 
-LREngine::LREngine(LR::API_TYPE Type) : m_API_Type(Type) {
-	if (!SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError()); // Load SDL
+namespace LR {
 
+
+void VulkanAPI::Draw() {
+
+}
+
+bool VulkanAPI::Initialize() {
 	m_VkApplicationInfo.pApplicationName = "Hello Triangle";
 	m_VkApplicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	m_VkApplicationInfo.pEngineName = "No Engine";
@@ -55,28 +61,11 @@ LREngine::LREngine(LR::API_TYPE Type) : m_API_Type(Type) {
 	m_VkDeviceCreateInfo.ppEnabledExtensionNames = requiredDeviceExtension.data();
 
 	m_VkDevice = vk::raii::Device(m_VkPhysicalDevice, m_VkDeviceCreateInfo);
+
+	return true;
 }
 
-LREngine::~LREngine() {
-	delete m_Window;
-}
-
-void LREngine::Update() {
-	if (!m_Window) return;
-
-	SDL_Event event;
-	while (m_Window->PollEvents(&event)) {
-		// eventhandler.signal(event) or something
-		if (event.type == SDL_EVENT_QUIT) m_IsActive = false;
-	}
-
-
-}
-
-LRWindow* LREngine::CreateWindow(const glm::vec2& size, SDL_WindowFlags flags, const char* title) {
-	m_Window = new LRWindow(size, flags, title, m_VkInstance);
-
-
+void VulkanAPI::CreateSwapChain(Window* m_Window) {
 	// Kinda just put everything here and assume it has support, fix shit later
 	vk::SurfaceCapabilitiesKHR surfaceCapabilities = m_VkPhysicalDevice.getSurfaceCapabilitiesKHR(*m_Window);
 	std::vector<vk::SurfaceFormatKHR> availableFormats = m_VkPhysicalDevice.getSurfaceFormatsKHR(*m_Window);
@@ -85,7 +74,7 @@ LRWindow* LREngine::CreateWindow(const glm::vec2& size, SDL_WindowFlags flags, c
 	const auto formatIt = std::ranges::find_if(
 		availableFormats,
 		[](const auto& format) { return format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear; });
-	
+
 	vk::SwapchainCreateInfoKHR swapChainCreateInfo{};
 
 	vk::SurfaceFormatKHR swapChainSurfaceFormat = formatIt != availableFormats.end() ? *formatIt : availableFormats[0];
@@ -108,8 +97,8 @@ LRWindow* LREngine::CreateWindow(const glm::vec2& size, SDL_WindowFlags flags, c
 	swapChainCreateInfo.clipped = true;
 	swapChainCreateInfo.oldSwapchain = nullptr;
 
-	m_SwapChain = new vk::raii::SwapchainKHR(m_VkDevice, swapChainCreateInfo);
-	m_SwapChainImages = m_SwapChain->getImages();
+	m_SwapChain = vk::raii::SwapchainKHR(m_VkDevice, swapChainCreateInfo);
+	m_SwapChainImages = m_SwapChain.getImages();
 
 	vk::ImageViewCreateInfo imageViewCreateInfo;
 	imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
@@ -117,5 +106,12 @@ LRWindow* LREngine::CreateWindow(const glm::vec2& size, SDL_WindowFlags flags, c
 	imageViewCreateInfo.subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 };
 	imageViewCreateInfo.components = { vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity };
 
-	return m_Window;
+	/*for (auto& image : m_SwapChainImages)
+	{
+		imageViewCreateInfo.image = image;
+		m_SwapChainImages.emplace_back(m_VkDevice, imageViewCreateInfo);
+	}*/
 }
+
+}
+

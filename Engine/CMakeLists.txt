@@ -175,3 +175,89 @@ target_compile_definitions(LREngine
 set_target_properties(LREngine PROPERTIES
     WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
+
+# --------------------------------------------------
+# Compile Shaders
+# --------------------------------------------------
+
+
+find_program(
+    SLANGC_EXECUTABLE
+    NAMES slangc slangc.exe
+    HINTS "$ENV{VULKAN_SDK}/Bin"
+    REQUIRED
+)
+
+function(add_slang_shader_target TARGET)
+
+    cmake_parse_arguments(
+        PARSE_ARGV 1 SHADER
+        ""
+        ""
+        "SOURCES"
+    )
+
+    if(NOT SHADER_SOURCES)
+        message(FATAL_ERROR "No Slang shader sources provided!")
+    endif()
+
+    set(SHADERS_DIR "${CMAKE_CURRENT_BINARY_DIR}/shaders")
+
+    set(SHADER_OUTPUTS "")
+
+    foreach(SOURCE IN LISTS SHADER_SOURCES)
+
+        get_filename_component(
+            SHADER_NAME
+            "${SOURCE}"
+            NAME_WE
+        )
+
+        set(SHADER_OUTPUT "${SHADERS_DIR}/${SHADER_NAME}.spv")
+
+        add_custom_command(
+            OUTPUT "${SHADER_OUTPUT}"
+
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "${SHADERS_DIR}"
+
+            COMMAND "${SLANGC_EXECUTABLE}"
+                "${SOURCE}"
+                -target spirv
+                -profile spirv_1_4
+                -emit-spirv-directly
+                -fvk-use-entrypoint-name
+                -o "${SHADER_OUTPUT}"
+
+            DEPENDS "${SOURCE}"
+
+            COMMENT "Compiling ${SHADER_NAME}.slang"
+            VERBATIM
+        )
+
+        list(APPEND SHADER_OUTPUTS "${SHADER_OUTPUT}")
+
+    endforeach()
+
+    add_custom_target(
+        ${TARGET}
+        DEPENDS ${SHADER_OUTPUTS}
+    )
+
+endfunction()
+
+
+
+file(GLOB SHADER_SLANG_SOURCES
+    CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.slang"
+)
+
+set(SHADERS_DIR "${CMAKE_CURRENT_BINARY_DIR}/shaders")
+set(SHADER_OUTPUT "${SHADERS_DIR}/slang.spv")
+
+add_slang_shader_target(
+    shaders
+    SOURCES ${SHADER_SLANG_SOURCES}
+)
+
+add_dependencies(LREngine shaders)

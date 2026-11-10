@@ -1,9 +1,9 @@
 #include <iostream>
-#include <LREngine.hpp>
+#include <LR/Engine.hpp>
 
 int main() {
-	LREngine engine = LREngine(LR::API_TYPE::VULKAN);
-	engine.CreateWindow(glm::vec2(1200, 800), SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE, "");
+	LR::Engine engine = LR::Engine(LR::API_TYPE::VULKAN);
+	engine.CreateWindow(glm::vec2(1200, 800), "");
 
 	while (engine.IsActive()) {
 		
