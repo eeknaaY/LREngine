@@ -5,6 +5,7 @@
 
 #include "Window.hpp"
 #include "Graphics/Renderer.hpp"
+#include "Graphics/Shader.hpp"
 
 namespace LR {
 
@@ -16,14 +17,18 @@ public:
 	void Update();
 	bool IsActive() const { return m_IsActive; }
 
-	Window* CreateWindow(const glm::vec2& size, const char* title, SDL_WindowFlags flags = 0);
+	std::shared_ptr<Window> CreateWindow(const glm::vec2& size, const char* title, SDL_WindowFlags flags = 0);
+	Shader LoadShader(const char* path);
 
 private:
 	bool m_IsActive = true;
-	Window* m_Window = nullptr;
-	Renderer* m_Renderer = nullptr;
-	const LR::API_TYPE m_API_Type;
 
+	std::shared_ptr<Window>m_Window;
+	std::shared_ptr<Renderer>m_Renderer;
+	// Load shaders into a list?
+	//std::vector<Shader> m_Shaders;
+
+	const LR::API_TYPE m_API_Type;
 };
 
 }

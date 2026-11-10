@@ -1,4 +1,4 @@
-#include "LR/Graphics/VulkanAPI.hpp"
+#include "LR/Graphics/Vulkan/VulkanAPI.hpp"
 
 #include <SDL3/SDL_vulkan.h>
 
@@ -66,7 +66,6 @@ bool VulkanAPI::Initialize() {
 }
 
 void VulkanAPI::CreateSwapChain(Window* m_Window) {
-	// Kinda just put everything here and assume it has support, fix shit later
 	vk::SurfaceCapabilitiesKHR surfaceCapabilities = m_VkPhysicalDevice.getSurfaceCapabilitiesKHR(*m_Window);
 	std::vector<vk::SurfaceFormatKHR> availableFormats = m_VkPhysicalDevice.getSurfaceFormatsKHR(*m_Window);
 	std::vector<vk::PresentModeKHR> availablePresentModes = m_VkPhysicalDevice.getSurfacePresentModesKHR(*m_Window);

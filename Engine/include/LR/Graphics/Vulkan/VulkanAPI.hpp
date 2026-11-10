@@ -1,10 +1,9 @@
 #ifndef LRVULKANAPI_HPP
 #define LRVULKANAPI_HPP
 
-#include "GraphicsAPI.hpp"
-#include "../Window.hpp"
+#include "../Interfaces/GraphicsAPI.hpp"
+#include "../../Window.hpp"
 
-#include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
 namespace LR {
@@ -15,6 +14,7 @@ public:
 
 	void CreateSwapChain(Window* m_Window);
 	const vk::raii::Instance& GetInstance() { return m_VkInstance; }
+	const vk::raii::Device& GetDevice() { return m_VkDevice; }
 
 private:
 	vk::raii::Context m_VkContext;

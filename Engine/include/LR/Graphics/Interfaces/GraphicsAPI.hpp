@@ -3,10 +3,6 @@
 
 namespace LR {
 
-enum class API_TYPE {
-	VULKAN
-};
-
 class GraphicsAPI {
 public:
 	GraphicsAPI() = default;
