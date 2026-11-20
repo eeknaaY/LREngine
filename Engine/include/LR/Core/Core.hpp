@@ -1,10 +1,12 @@
 #ifndef LRCORE_HPP
 #define LRCORE_HPP
 
+#include "Settings.hpp"
+
 namespace LR {
-	enum class API_TYPE {
-		VULKAN
-	};
+	namespace Core {
+
+	}
 }
 
 #endif

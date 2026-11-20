@@ -223,7 +223,7 @@ function(add_slang_shader_target TARGET)
             COMMAND "${SLANGC_EXECUTABLE}"
                 "${SOURCE}"
                 -target spirv
-                -profile spirv_1_4
+                -profile spirv_1_5
                 -emit-spirv-directly
                 -fvk-use-entrypoint-name
                 -o "${SHADER_OUTPUT}"

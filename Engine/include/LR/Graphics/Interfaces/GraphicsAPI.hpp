@@ -1,6 +1,8 @@
 #ifndef LRGRAPHICSAPI_HPP
 #define LRGRAPHICSAPI_HPP
 
+#include "../../Scene/SubScene.hpp"
+
 namespace LR {
 
 class GraphicsAPI {
@@ -8,7 +10,7 @@ public:
 	GraphicsAPI() = default;
 
 	virtual bool Initialize() = 0;
-	virtual void Draw() = 0;
+	virtual void Draw(const SubScene& subscene) = 0;
 };
 
 }

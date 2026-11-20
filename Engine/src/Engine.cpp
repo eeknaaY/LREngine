@@ -3,10 +3,12 @@
 
 namespace LR {
 
-Engine::Engine(LR::API_TYPE Type) : m_API_Type(Type) {
+Engine::Engine(LR::Core::API_TYPE Type) {
 	if (!SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError()); // Load SDL
 
 	m_Renderer = std::make_shared<Renderer>(Type);
+	m_Camera = std::make_shared<Camera>();
+	LR::Core::settings.SetAPIUsage(Type);
 }
 
 Engine::~Engine() {
@@ -18,17 +20,19 @@ void Engine::Update() {
 	while (m_Window->PollEvents(&event)) {
 		// eventhandler.signal(event) or something
 		if (event.type == SDL_EVENT_QUIT) m_IsActive = false;
+
+
+		//if (m_Camera) m_Camera->Update();
 	}
-
-
 }
 
 std::shared_ptr<Window> Engine::CreateWindow(const glm::vec2& size, const char* title, SDL_WindowFlags flags) {
-	if (m_API_Type == LR::API_TYPE::VULKAN) flags |= SDL_WINDOW_VULKAN;
+	LR::Core::API_TYPE m_API_Type = LR::Core::settings.GetAPIUsage();
+	if (m_API_Type == LR::Core::API_TYPE::VULKAN) flags |= SDL_WINDOW_VULKAN;
 	m_Window = std::make_shared<Window>(size, flags, title);
 	
 	switch (m_API_Type) {
-	case LR::API_TYPE::VULKAN:
+	case LR::Core::API_TYPE::VULKAN:
 		VulkanAPI* vulkanAPI = static_cast<VulkanAPI*>(m_Renderer->GetGraphicsAPI());
 		m_Window->CreateSurface(vulkanAPI->GetInstance());
 		vulkanAPI->CreateSwapChain(m_Window.get());
@@ -39,15 +43,44 @@ std::shared_ptr<Window> Engine::CreateWindow(const glm::vec2& size, const char* 
 	return m_Window;
 }
 
-Shader Engine::LoadShader(const char* path)
-{
-	switch (m_API_Type) {
-	case LR::API_TYPE::VULKAN:
+// Send in the path of the shader, TODO: Atm requires a "/" before the name, fix, the Shader FileName is also done like this, fix as well
+std::shared_ptr<Shader> Engine::LoadShader(const char* path) {
+	
+	
+	const char* fileName = std::strrchr(path, '/') + 1;
+	std::shared_ptr<Shader> shader;
+
+	// For now return the shader if its already loaded, TODO: You should be able to create new instances of the same shader, will have to return a list of ptrs.
+	shader = Shader::GetShader(fileName);
+	if (shader) return shader;
+
+	Core::API_TYPE apiType = Core::settings.GetAPIUsage();
+	switch (apiType) {
+	case Core::API_TYPE::VULKAN:
 		VulkanAPI* vulkanAPI = static_cast<VulkanAPI*>(m_Renderer->GetGraphicsAPI());
-		return Shader(m_API_Type, path, vulkanAPI->GetDevice());
+		shader = std::make_shared<Shader>(apiType, path, vulkanAPI->GetDevice());
+		if (shader->Loaded) {
+			VulkanShader* vulkanShader = shader->Get<VulkanShader>();
+			vulkanShader->CreatePipeline(vulkanAPI->GetExtent(), vulkanAPI->GetDevice(), vulkanAPI->GetSurfaceFormat()); // TODO: Make selectable pre-created pipeline.
+		}
+		break;
 	}
 
-	return Shader(m_API_Type, path);
+	if (!shader) shader = std::make_shared<Shader>(apiType, path);
+	
+	Shader::CacheShader(shader);
+
+	std::printf("Created New Shader\n");
+	return shader;
+}
+
+std::shared_ptr<Shader> Engine::GetShader(const char* fileName)
+{
+	return Shader::GetShader(fileName);
+}
+
+void Engine::Draw(const SubScene& obj) {
+	m_Renderer->Draw(obj);
 }
 
 }

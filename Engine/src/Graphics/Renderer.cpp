@@ -2,9 +2,9 @@
 
 namespace LR {
 
-Renderer::Renderer(LR::API_TYPE Type) {
+Renderer::Renderer(Core::API_TYPE Type) {
 	switch (Type) {
-	case LR::API_TYPE::VULKAN:
+	case Core::API_TYPE::VULKAN:
 		m_GraphicsAPI = new VulkanAPI();
 		break;
 
@@ -18,6 +18,10 @@ Renderer::Renderer(LR::API_TYPE Type) {
 
 Renderer::~Renderer() {
 	delete m_GraphicsAPI;
+}
+
+void Renderer::Draw(const SubScene& subscene) {
+	m_GraphicsAPI->Draw(subscene);
 }
 
 bool Renderer::Initialize() {

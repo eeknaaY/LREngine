@@ -2,7 +2,8 @@
 #define LRRENDERER_HPP
 
 #include "Vulkan/VulkanAPI.hpp"
-#include "../Core.hpp"
+#include "../Scene/SubScene.hpp"
+#include "../Core/Core.hpp"
 
 
 namespace LR {
@@ -11,10 +12,11 @@ namespace LR {
 class Renderer {
 public:
 	Renderer() = default;
-	Renderer(API_TYPE Type);
+	Renderer(Core::API_TYPE Type);
 	~Renderer();
 
 	GraphicsAPI* GetGraphicsAPI() const { return m_GraphicsAPI; }
+	void Draw(const SubScene& obj);
 
 private:
 	GraphicsAPI* m_GraphicsAPI = nullptr;
