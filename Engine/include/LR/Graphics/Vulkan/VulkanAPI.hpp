@@ -25,7 +25,7 @@ public:
 	void WaitForSync();
 
 private:
-	void CreateObjects();
+	void InitializeObjects();
 	void TransitionImageLayout(
 		uint32_t				imageIndex,
 		vk::ImageLayout         old_layout,
@@ -38,32 +38,32 @@ private:
 	void RecordCommandBuffer(uint32_t imageIndex, const vk::Pipeline& pipeline);
 
 private:
+	const int MAX_FRAMES_IN_FLIGHT = 2;
+	uint32_t m_FrameIndex = 0;
+	
 	vk::raii::Context m_VkContext;
 	vk::raii::Instance m_VkInstance{ nullptr };
 
-	vk::ApplicationInfo m_VkApplicationInfo;
-	vk::InstanceCreateInfo m_VkInstanceCreateInfo;
-	vk::DeviceCreateInfo m_VkDeviceCreateInfo;
+	vk::SurfaceFormatKHR m_VkSurfaceFormatKHR;
 
 	vk::raii::PhysicalDevice m_VkPhysicalDevice{ nullptr };
 	vk::raii::Device m_VkDevice{ nullptr };
 
+	vk::raii::CommandPool m_VkCommandPool{ nullptr };
+
+	std::vector<vk::raii::CommandBuffer> m_VkCommandBuffers;
+	std::vector<vk::raii::Semaphore	> m_VkPresentCompleteSemaphores;
+	std::vector<vk::raii::Semaphore	> m_VkRenderFinishedSemaphores;
+	std::vector<vk::raii::Fence		> m_VkDrawFences;
+
+	vk::raii::Queue m_VkQueue{ nullptr };
+
 	vk::Extent2D m_VkSwapChainExtent;
 
-	vk::SurfaceFormatKHR m_VkSurfaceFormatKHR;
 	vk::raii::SwapchainKHR m_VkSwapChain{ nullptr };
 
 	std::vector<vk::raii::ImageView> m_VkSwapChainImageViews;
 	std::vector<vk::Image> m_VkSwapChainImage;
-
-	vk::raii::CommandPool m_VkCommandPool{ nullptr };
-	vk::raii::CommandBuffer m_VkCommandBuffer{ nullptr };
-
-	vk::raii::Semaphore m_VkPresentCompleteSemaphore = nullptr;
-	vk::raii::Semaphore m_VkRenderFinishedSemaphore = nullptr;
-	vk::raii::Fence     m_VkDrawFence = nullptr;
-
-	vk::raii::Queue m_VkQueue{ nullptr };
 };
 }
 

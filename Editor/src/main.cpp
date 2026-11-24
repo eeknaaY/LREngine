@@ -3,10 +3,9 @@
 
 int main() {
 	LR::Engine engine = LR::Engine(LR::Core::API_TYPE::VULKAN);
-	engine.CreateWindow(glm::vec2(1200, 800), "");
+	engine.CreateWindow(glm::vec2(850, 800), "");
 
 	std::shared_ptr<LR::Shader> shader = engine.LoadShader("../../Engine/shaders/shader.spv");
-	std::cout << LR::Shader::GetShader("shader.spv")->FileName;
 
 	LR::GameObject obj = LR::GameObject();
 	obj.SetShader(shader);					// Eventually obj.SetComponent<Shader>() = shader;?

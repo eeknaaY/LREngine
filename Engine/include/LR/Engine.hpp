@@ -33,8 +33,8 @@ private:
 
 	bool m_IsActive = true;
 
-	std::shared_ptr<Window>m_Window;
 	std::shared_ptr<Renderer>m_Renderer;
+	std::shared_ptr<Window>m_Window;
 	std::shared_ptr<Camera>m_Camera;
 
 	//std::unordered_map<std::shared_ptr<Shader>, std::vector<GameObject>>m_ShaderObjects; // Should be in subscene

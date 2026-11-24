@@ -3,12 +3,19 @@
 
 namespace LR {
 
-Engine::Engine(LR::Core::API_TYPE Type) {
-	if (!SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError()); // Load SDL
+Engine::Engine(Core::API_TYPE Type) {
+	try {
+		if (!SDL_Init(SDL_INIT_VIDEO)) throw std::runtime_error(SDL_GetError()); // Load SDL
 
-	m_Renderer = std::make_shared<Renderer>(Type);
-	m_Camera = std::make_shared<Camera>();
-	LR::Core::settings.SetAPIUsage(Type);
+		m_Renderer = std::make_shared<Renderer>(Type);
+		m_Camera = std::make_shared<Camera>();
+		Core::settings.SetAPIUsage(Type);
+		Core::Debug::Log(std::format("Using API: {}", Core::APIToString(Type)));
+	} 
+	catch (const std::exception& e) {
+		Core::settings.SetAPIUsage(Core::API_TYPE::HEADLESS);
+		Core::Debug::LogError("Unable to create SDL window. Proceeding as headless.");
+	}
 }
 
 Engine::~Engine() {
@@ -20,10 +27,9 @@ void Engine::Update() {
 	while (m_Window->PollEvents(&event)) {
 		// eventhandler.signal(event) or something
 		if (event.type == SDL_EVENT_QUIT) m_IsActive = false;
-
-
-		//if (m_Camera) m_Camera->Update();
 	}
+
+	//if (m_Camera) m_Camera->Update();
 }
 
 std::shared_ptr<Window> Engine::CreateWindow(const glm::vec2& size, const char* title, SDL_WindowFlags flags) {
@@ -52,7 +58,10 @@ std::shared_ptr<Shader> Engine::LoadShader(const char* path) {
 
 	// For now return the shader if its already loaded, TODO: You should be able to create new instances of the same shader, will have to return a list of ptrs.
 	shader = Shader::GetShader(fileName);
-	if (shader) return shader;
+	if (shader) {
+		Core::Debug::Log(std::format("Retrieving cached shader: {}", fileName));
+		return shader;
+	}
 
 	Core::API_TYPE apiType = Core::settings.GetAPIUsage();
 	switch (apiType) {
@@ -67,10 +76,10 @@ std::shared_ptr<Shader> Engine::LoadShader(const char* path) {
 	}
 
 	if (!shader) shader = std::make_shared<Shader>(apiType, path);
-	
+	Core::Debug::Log(std::format("Loading new shader: {}", fileName));
+
 	Shader::CacheShader(shader);
 
-	std::printf("Created New Shader\n");
 	return shader;
 }
 

@@ -3,8 +3,7 @@
 
 #include <stdexcept>
 
-namespace LR {
-	namespace Core {
+namespace LR::Core {
 		enum class API_TYPE {
 			UNINITIALIZED,
 			VULKAN,
@@ -29,7 +28,15 @@ namespace LR {
 		};
 
 		extern Settings settings;
-	}
+
+		inline std::string APIToString(API_TYPE API) {
+			switch (API) {
+			case API_TYPE::UNINITIALIZED: return "UNINITIALIZED";
+			case API_TYPE::VULKAN:        return "VULKAN";
+			case API_TYPE::HEADLESS:      return "HEADLESS";
+			default:                      return "UNKNOWN";
+			}
+		}
 }
 
 #endif

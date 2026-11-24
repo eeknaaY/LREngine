@@ -1,19 +1,17 @@
 #include "LR/Graphics/Shader.hpp"
 #include "LR/Graphics/Vulkan/VulkanAPI.hpp"
+#include "LR/Core/Core.hpp"
 
 #include <fstream>
-#include <vector>
-#include <iostream>
-
 
 namespace LR {
 
 	Shader::Shader(Core::API_TYPE Type, const char* path) : m_Shader(LoadShader(Type, path)), Loaded(m_Shader != nullptr), FileName(std::strrchr(path, '/') + 1) {
-		std::cout << (Loaded ? std::format("{} loaded successfully.\n", FileName) : std::format("{} loading failed.\n", FileName));
+		
 	}
 
 	Shader::Shader(Core::API_TYPE Type, const char* path, const vk::raii::Device& instance) : m_Shader(LoadShader(Type, path, instance)), Loaded(m_Shader != nullptr), FileName(std::strrchr(path, '/') + 1) {
-		std::cout << (Loaded ? std::format("{} loaded successfully.\n", FileName) : std::format("{} loading failed.\n", FileName));
+		
 	}
 
 	Shader::~Shader() {
@@ -25,6 +23,7 @@ namespace LR {
 		if (GetShader(shader->FileName)) return;
 
 		m_LoadedShaders.insert(shader);
+		Core::Debug::Log(std::format("Caching shader: {}", shader->FileName));
 	}
 
 	std::shared_ptr<Shader> Shader::GetShader(const char* fileName)

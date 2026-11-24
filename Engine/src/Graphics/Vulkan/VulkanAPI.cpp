@@ -15,6 +15,8 @@ VulkanAPI::~VulkanAPI() {
 
 
 void VulkanAPI::Draw(const SubScene& subscene) {
+	m_FrameIndex = (m_FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+
 	const std::vector<GameObject>& objects = subscene.GetGameObjets();
 	if (objects.size() == 0) return;
 
@@ -22,19 +24,19 @@ void VulkanAPI::Draw(const SubScene& subscene) {
 	VulkanShader* shader = objects[0].GetShader()->Get<VulkanShader>();
 	vk::Pipeline pipeline = *shader->GetPipeline();
 
-	auto fenceResult = m_VkDevice.waitForFences(*m_VkDrawFence, vk::True, UINT64_MAX);
+	auto fenceResult = m_VkDevice.waitForFences(*m_VkDrawFences[m_FrameIndex], vk::True, UINT64_MAX);
 	if (fenceResult != vk::Result::eSuccess)
 	{
-		throw std::runtime_error("failed to wait for fence!");
+		Core::Debug::LogError("Failed to wait for fence.");
+		return;
 	}
-	m_VkDevice.resetFences(*m_VkDrawFence);
 
-	auto [result, imageIndex] = m_VkSwapChain.acquireNextImage(UINT64_MAX, *m_VkPresentCompleteSemaphore, nullptr);
+	auto [result, imageIndex] = m_VkSwapChain.acquireNextImage(UINT64_MAX, *m_VkPresentCompleteSemaphores[m_FrameIndex], nullptr);
+	
+	m_VkCommandBuffers[m_FrameIndex].reset();
+	m_VkDevice.resetFences(*m_VkDrawFences[m_FrameIndex]);
 
 	RecordCommandBuffer(imageIndex, pipeline);
-
-	// DONT USE WAIT IDLE SINCE IT COMPLETELY INVALIDATES THE ENTIRE POINT, BUT I JUST WANT A FUCKING TRIANGLE
-	m_VkQueue.waitIdle();
 
 	vk::PipelineStageFlags waitDestinationStageMask(
 		vk::PipelineStageFlagBits::eColorAttachmentOutput
@@ -42,18 +44,18 @@ void VulkanAPI::Draw(const SubScene& subscene) {
 
 	vk::SubmitInfo submitInfo{};
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &*m_VkPresentCompleteSemaphore;
+	submitInfo.pWaitSemaphores = &*m_VkPresentCompleteSemaphores[m_FrameIndex];
 	submitInfo.pWaitDstStageMask = &waitDestinationStageMask;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &*m_VkCommandBuffer;
+	submitInfo.pCommandBuffers = &*m_VkCommandBuffers[m_FrameIndex];
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &*m_VkRenderFinishedSemaphore;
+	submitInfo.pSignalSemaphores = &*m_VkRenderFinishedSemaphores[imageIndex];
 
-	m_VkQueue.submit(submitInfo, *m_VkDrawFence);
+	m_VkQueue.submit(submitInfo, *m_VkDrawFences[m_FrameIndex]);
 
 	vk::PresentInfoKHR presentInfoKHR{};
 	presentInfoKHR.waitSemaphoreCount = 1;
-	presentInfoKHR.pWaitSemaphores = &*m_VkRenderFinishedSemaphore;
+	presentInfoKHR.pWaitSemaphores = &*m_VkRenderFinishedSemaphores[imageIndex];
 	presentInfoKHR.swapchainCount = 1;
 	presentInfoKHR.pSwapchains = &*m_VkSwapChain;
 	presentInfoKHR.pImageIndices = &imageIndex;
@@ -62,25 +64,27 @@ void VulkanAPI::Draw(const SubScene& subscene) {
 }
 
 bool VulkanAPI::Initialize() {
-	CreateObjects();
+	InitializeObjects();
 
 	return true;
 }
 
-void VulkanAPI::CreateObjects() {
+void VulkanAPI::InitializeObjects() {
+	vk::ApplicationInfo m_VkApplicationInfo;
 	m_VkApplicationInfo.pApplicationName = "Hello Triangle";
 	m_VkApplicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	m_VkApplicationInfo.pEngineName = "No Engine";
 	m_VkApplicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 	m_VkApplicationInfo.apiVersion = VK_API_VERSION_1_3;
 
+	vk::InstanceCreateInfo m_VkInstanceCreateInfo;
 	m_VkInstanceCreateInfo.pApplicationInfo = &m_VkApplicationInfo;
 	Uint32 extensionCount = 0;
 	const char* const* extensions = SDL_Vulkan_GetInstanceExtensions(&extensionCount);
 	m_VkInstanceCreateInfo.enabledExtensionCount = extensionCount;
 	m_VkInstanceCreateInfo.ppEnabledExtensionNames = extensions;
 
-	// DEBUG
+	// ++DEBUG
 	std::vector<const char*> extensionVector(extensions, extensions + extensionCount);
 	const std::vector<char const*> validationLayers = {
 		"VK_LAYER_KHRONOS_validation"
@@ -124,7 +128,7 @@ void VulkanAPI::CreateObjects() {
 	m_VkInstanceCreateInfo.ppEnabledLayerNames = requiredLayers.data();
 	m_VkInstanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensionVector.size());
 	m_VkInstanceCreateInfo.ppEnabledExtensionNames = extensionVector.data();
-	// DEBUG
+	// --DEBUG
 
 
 	m_VkInstanceCreateInfo.pApplicationInfo = &m_VkApplicationInfo;
@@ -163,7 +167,7 @@ void VulkanAPI::CreateObjects() {
 	featureChain.get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>()
 		.extendedDynamicState = true;
 
-
+	vk::DeviceCreateInfo m_VkDeviceCreateInfo;
 	m_VkDeviceCreateInfo.pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>();
 	m_VkDeviceCreateInfo.queueCreateInfoCount = 1;
 	m_VkDeviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
@@ -182,16 +186,9 @@ void VulkanAPI::CreateObjects() {
 	vk::CommandBufferAllocateInfo allocInfo;
 	allocInfo.commandPool = m_VkCommandPool;
 	allocInfo.level = vk::CommandBufferLevel::ePrimary;
-	allocInfo.commandBufferCount = 1;
+	allocInfo.commandBufferCount = MAX_FRAMES_IN_FLIGHT;
 
-	m_VkCommandBuffer = std::move(vk::raii::CommandBuffers(m_VkDevice, allocInfo).front());
-
-	vk::FenceCreateInfo fenceInfo{};
-	fenceInfo.flags = vk::FenceCreateFlagBits::eSignaled;
-
-	m_VkPresentCompleteSemaphore = vk::raii::Semaphore(m_VkDevice, vk::SemaphoreCreateInfo());
-	m_VkRenderFinishedSemaphore = vk::raii::Semaphore(m_VkDevice, vk::SemaphoreCreateInfo());
-	m_VkDrawFence = vk::raii::Fence(m_VkDevice, fenceInfo);
+	m_VkCommandBuffers = vk::raii::CommandBuffers(m_VkDevice, allocInfo);
 }
 
 void VulkanAPI::CreateSwapChain(Window* m_Window) {
@@ -241,6 +238,20 @@ void VulkanAPI::CreateSwapChain(Window* m_Window) {
 			m_VkDevice.createImageView(imageViewCreateInfo)
 		);
 	}
+
+	vk::FenceCreateInfo fenceInfo{};
+	fenceInfo.flags = vk::FenceCreateFlagBits::eSignaled;
+
+	for (size_t i = 0; i < m_VkSwapChainImage.size(); i++)
+	{
+		m_VkRenderFinishedSemaphores.emplace_back(m_VkDevice, vk::SemaphoreCreateInfo());
+	}
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+	{
+		m_VkPresentCompleteSemaphores.emplace_back(m_VkDevice, vk::SemaphoreCreateInfo());
+		m_VkDrawFences.emplace_back(m_VkDevice, fenceInfo);
+	}
 }
 
 void VulkanAPI::WaitForSync() {
@@ -280,11 +291,12 @@ void VulkanAPI::TransitionImageLayout(
 	dependency_info.dependencyFlags = {};
 	dependency_info.imageMemoryBarrierCount = 1;
 	dependency_info.pImageMemoryBarriers = &barrier;
-	m_VkCommandBuffer.pipelineBarrier2(dependency_info);
+	m_VkCommandBuffers[m_FrameIndex].pipelineBarrier2(dependency_info);
 }
 
 void VulkanAPI::RecordCommandBuffer(uint32_t imageIndex, const vk::Pipeline& pipeline) {
-	m_VkCommandBuffer.begin({});
+	vk::raii::CommandBuffer& commandBuffer = m_VkCommandBuffers[m_FrameIndex];
+	commandBuffer.begin({});
 
 	// Before starting rendering, transition the swapchain image to vk::ImageLayout::eColorAttachmentOptimal
 	TransitionImageLayout(
@@ -317,15 +329,15 @@ void VulkanAPI::RecordCommandBuffer(uint32_t imageIndex, const vk::Pipeline& pip
 	renderingInfo.colorAttachmentCount = 1;
 	renderingInfo.pColorAttachments = &attachmentInfo;
 
-	m_VkCommandBuffer.beginRendering(renderingInfo);
-	m_VkCommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
+	commandBuffer.beginRendering(renderingInfo);
+	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 
-	m_VkCommandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(m_VkSwapChainExtent.width), static_cast<float>(m_VkSwapChainExtent.height), 0.0f, 1.0f));
-	m_VkCommandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_VkSwapChainExtent));
+	commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(m_VkSwapChainExtent.width), static_cast<float>(m_VkSwapChainExtent.height), 0.0f, 1.0f));
+	commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_VkSwapChainExtent));
 
-	m_VkCommandBuffer.draw(3, 1, 0, 0);
+	commandBuffer.draw(3, 1, 0, 0);
 
-	m_VkCommandBuffer.endRendering();
+	commandBuffer.endRendering();
 
 	// After rendering, transition the swapchain image to vk::ImageLayout::ePresentSrcKHR
 	TransitionImageLayout(
@@ -338,7 +350,7 @@ void VulkanAPI::RecordCommandBuffer(uint32_t imageIndex, const vk::Pipeline& pip
 		vk::PipelineStageFlagBits2::eBottomOfPipe               // dstStage
 	);
 
-	m_VkCommandBuffer.end();
+	commandBuffer.end();
 }
 
 }
