@@ -8,14 +8,16 @@
 #include <vulkan/vulkan_raii.hpp>
 
 namespace LR {
+
 class VulkanAPI : public GraphicsAPI {
 public:
 	VulkanAPI();
 	~VulkanAPI();
 
-	void Draw(const SubScene& subscene) override;
+	void Draw(SubScene& subscene) override;
 
 	const vk::raii::Device& GetDevice() const { return m_VkDevice; }
+	const vk::raii::PhysicalDevice& GetPhysicalDevice() const { return m_VkPhysicalDevice; }
 	const vk::SurfaceFormatKHR& GetSurfaceFormat() const { return m_VkSurfaceFormatKHR; }
 	const vk::raii::Instance& GetInstance() const { return m_VkInstance; }
 	const vk::Extent2D& GetExtent() const { return m_VkSwapChainExtent; }
@@ -35,7 +37,7 @@ private:
 		vk::PipelineStageFlags2 src_stage_mask,
 		vk::PipelineStageFlags2 dst_stage_mask);
 
-	void RecordCommandBuffer(uint32_t imageIndex, const vk::Pipeline& pipeline);
+	void RecordCommandBuffer(uint32_t imageIndex, const vk::Pipeline& pipeline, std::vector<std::shared_ptr<GameObject>>& objects);
 
 private:
 	const int MAX_FRAMES_IN_FLIGHT = 2;

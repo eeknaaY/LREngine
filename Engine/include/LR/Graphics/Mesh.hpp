@@ -2,26 +2,32 @@
 #define LRMESH_HPP
 
 #include <vector>
-#include <glm/vec3.hpp>
+
+#include "Interfaces/GenericMesh.hpp"
+#include "../Core/Core.hpp"
+#include "Vulkan/VulkanMesh.hpp"
 
 namespace LR {
 
-	struct Vertex {
-		glm::vec3 Position;
-	};
-
-	// Factory for rendering APIs
 	class Mesh {
 	public:
 		Mesh();
+		Mesh(const std::vector<Vertex>& Vertices, const std::vector<uint16_t>& Indicies);
+		Mesh(const std::vector<Vertex>& Vertices, const std::vector<uint16_t>& Indicies, VulkanAPI* api);
 		~Mesh();
 
-		void SetVertices(std::vector<Vertex>& vertices);
-		void SetIndicies(std::vector<uint16_t>& vertices);
+		template <typename T> requires std::derived_from<T, GenericMesh>
+		T* Get() { return static_cast<T*>(m_Mesh); }
+
+		void Bind();
+
+		void SetVertices(const std::vector<Vertex>& vertices);
+		void SetIndicies(const std::vector<uint16_t>& indicies);
+		std::vector<Vertex> GetVertices();
+		std::vector<uint16_t> GetIndicies();
 
 	private:
-		std::vector<Vertex>m_Vertices;
-		std::vector<uint16_t>m_Indicies;
+		GenericMesh* m_Mesh = nullptr;
 	};
 
 }

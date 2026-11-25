@@ -15,8 +15,10 @@ public:
 	Renderer(Core::API_TYPE Type);
 	~Renderer();
 
-	GraphicsAPI* GetGraphicsAPI() const { return m_GraphicsAPI; }
-	void Draw(const SubScene& obj);
+	void Draw(SubScene& obj);
+
+	template <typename T> requires std::derived_from<T, GraphicsAPI>
+	T* Get() { return static_cast<T*>(m_GraphicsAPI); }
 
 private:
 	GraphicsAPI* m_GraphicsAPI = nullptr;

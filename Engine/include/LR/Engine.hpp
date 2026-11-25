@@ -6,6 +6,7 @@
 #include "Window.hpp"
 #include "Graphics/Renderer.hpp"
 #include "Graphics/Shader.hpp"
+#include "Graphics/Mesh.hpp"
 #include "Scene/GameObject.hpp"
 #include "Scene/Camera.hpp"
 #include "Core/Core.hpp"
@@ -24,10 +25,12 @@ public:
 
 	std::shared_ptr<Window> CreateWindow(const glm::vec2& size, const char* title, SDL_WindowFlags flags = 0);
 
+	std::shared_ptr<Mesh> LoadMesh(const std::vector<Vertex>& Vertices, const std::vector<uint16_t>& Indicies);
+
 	std::shared_ptr<Shader> LoadShader(const char* path);
 	std::shared_ptr<Shader> GetShader(const char* path);
 	
-	void Draw(const SubScene& obj);
+	void Draw(SubScene& obj);
 
 private:
 

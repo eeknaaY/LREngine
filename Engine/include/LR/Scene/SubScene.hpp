@@ -10,12 +10,14 @@
 namespace LR {
 	class SubScene {
 	public:
+		SubScene();
+
 		void AddGameObject(const GameObject& gameobject);
-		const std::vector<GameObject>& GetGameObjets() const;
+		std::vector<std::shared_ptr<GameObject>>& GetGameObjets();
 
 	private:
 		std::unordered_map<std::shared_ptr<Shader>, std::vector<GameObject>>m_ShaderObjects;
-		std::vector<GameObject> m_Objects;
+		std::vector<std::shared_ptr<GameObject>> m_Objects;
 	};
 }
 

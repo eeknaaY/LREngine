@@ -6,7 +6,7 @@ namespace LR::Core {
 	}
 
 	void Debug::LogError(const std::string_view& message) {
-		std::string redText = "\033[31mError: " + std::string(message) + "\033[0m";
-		std::cout << redText << "\n";
+		std::string redText = "\033[31mError: " + std::string(message) + "\033[0m\n";
+		std::cout << redText;
 	}
 }

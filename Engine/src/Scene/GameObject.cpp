@@ -13,16 +13,16 @@ namespace LR {
 		m_Shader = shader;
 	}
 
-	void GameObject::SetMesh(const Mesh& mesh) {
+	void GameObject::SetMesh(const std::shared_ptr<Mesh>& mesh) {
 		m_Mesh = mesh;
 	}
 
-	const std::shared_ptr<Shader> GameObject::GetShader() const
+	std::shared_ptr<Shader> GameObject::GetShader() const
 	{
 		return m_Shader;
 	}
 
-	const Mesh& GameObject::GetMesh() const
+	std::shared_ptr<Mesh> GameObject::GetMesh()
 	{
 		return m_Mesh;
 	}

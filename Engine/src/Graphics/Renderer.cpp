@@ -20,7 +20,7 @@ Renderer::~Renderer() {
 	delete m_GraphicsAPI;
 }
 
-void Renderer::Draw(const SubScene& subscene) {
+void Renderer::Draw(SubScene& subscene) {
 	m_GraphicsAPI->Draw(subscene);
 }
 

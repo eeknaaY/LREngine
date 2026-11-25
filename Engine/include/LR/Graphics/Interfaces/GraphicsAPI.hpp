@@ -10,7 +10,7 @@ public:
 	GraphicsAPI() = default;
 
 	virtual bool Initialize() = 0;
-	virtual void Draw(const SubScene& subscene) = 0;
+	virtual void Draw(SubScene& subscene) = 0;
 };
 
 }

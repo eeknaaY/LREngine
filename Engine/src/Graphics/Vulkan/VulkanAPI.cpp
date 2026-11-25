@@ -14,14 +14,14 @@ VulkanAPI::~VulkanAPI() {
 }
 
 
-void VulkanAPI::Draw(const SubScene& subscene) {
+void VulkanAPI::Draw(SubScene& subscene) {
 	m_FrameIndex = (m_FrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 
-	const std::vector<GameObject>& objects = subscene.GetGameObjets();
+	std::vector<std::shared_ptr<GameObject>>& objects = subscene.GetGameObjets();
 	if (objects.size() == 0) return;
 
 	// yah really fucked atm, just for testing
-	VulkanShader* shader = objects[0].GetShader()->Get<VulkanShader>();
+	VulkanShader* shader = objects[0]->GetShader()->Get<VulkanShader>();
 	vk::Pipeline pipeline = *shader->GetPipeline();
 
 	auto fenceResult = m_VkDevice.waitForFences(*m_VkDrawFences[m_FrameIndex], vk::True, UINT64_MAX);
@@ -36,7 +36,7 @@ void VulkanAPI::Draw(const SubScene& subscene) {
 	m_VkCommandBuffers[m_FrameIndex].reset();
 	m_VkDevice.resetFences(*m_VkDrawFences[m_FrameIndex]);
 
-	RecordCommandBuffer(imageIndex, pipeline);
+	RecordCommandBuffer(imageIndex, pipeline, objects);
 
 	vk::PipelineStageFlags waitDestinationStageMask(
 		vk::PipelineStageFlagBits::eColorAttachmentOutput
@@ -294,7 +294,7 @@ void VulkanAPI::TransitionImageLayout(
 	m_VkCommandBuffers[m_FrameIndex].pipelineBarrier2(dependency_info);
 }
 
-void VulkanAPI::RecordCommandBuffer(uint32_t imageIndex, const vk::Pipeline& pipeline) {
+void VulkanAPI::RecordCommandBuffer(uint32_t imageIndex, const vk::Pipeline& pipeline, std::vector<std::shared_ptr<GameObject>>& objects) {
 	vk::raii::CommandBuffer& commandBuffer = m_VkCommandBuffers[m_FrameIndex];
 	commandBuffer.begin({});
 
@@ -335,7 +335,13 @@ void VulkanAPI::RecordCommandBuffer(uint32_t imageIndex, const vk::Pipeline& pip
 	commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f, static_cast<float>(m_VkSwapChainExtent.width), static_cast<float>(m_VkSwapChainExtent.height), 0.0f, 1.0f));
 	commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_VkSwapChainExtent));
 
-	commandBuffer.draw(3, 1, 0, 0);
+	for (std::shared_ptr<GameObject>& obj : objects) {
+		std::shared_ptr<Mesh> mesh = obj->GetMesh();
+		VulkanMesh* vmesh = mesh->Get<VulkanMesh>();
+
+		commandBuffer.bindVertexBuffers(0, *vmesh->m_VertexBuffer, {0});
+		commandBuffer.draw(static_cast<uint32_t>(mesh->GetVertices().size()), 1, 0, 0);
+	}
 
 	commandBuffer.endRendering();
 

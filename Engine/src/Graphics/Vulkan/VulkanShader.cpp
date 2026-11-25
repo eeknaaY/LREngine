@@ -1,6 +1,7 @@
 #include <LR/Graphics/Vulkan/VulkanShader.hpp>
 
 #include <iostream>
+#include "LR/Graphics/Vulkan/VulkanMesh.hpp"
 
 namespace LR {
 	VulkanShader::VulkanShader(const std::vector<char>& buffer, const vk::raii::Device& device) {
@@ -56,6 +57,8 @@ namespace LR {
 			rasterizer.rasterizerDiscardEnable = vk::False;
 			rasterizer.polygonMode = vk::PolygonMode::eFill;
 			rasterizer.cullMode = vk::CullModeFlagBits::eBack;
+			//rasterizer.cullMode = vk::CullModeFlagBits::eNone;
+			rasterizer.frontFace = vk::FrontFace::eClockwise;
 			rasterizer.frontFace = vk::FrontFace::eClockwise;
 			rasterizer.depthBiasEnable = vk::False;
 			rasterizer.lineWidth = 1.0f;
@@ -95,6 +98,14 @@ namespace LR {
 			vk::PipelineDynamicStateCreateInfo dynamicState;
 			dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 			dynamicState.pDynamicStates = dynamicStates.data();
+
+			auto bindingDescription = VulkanMesh::GetBindingDescription();
+			auto attributeDescriptions = VulkanMesh::GetAttributeDescriptions();
+
+			vertexInputInfo.vertexBindingDescriptionCount = 1;
+			vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+			vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+			vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 			vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
 			pipelineCreateInfo.stageCount = 2;

@@ -39,7 +39,7 @@ std::shared_ptr<Window> Engine::CreateWindow(const glm::vec2& size, const char* 
 	
 	switch (m_API_Type) {
 	case LR::Core::API_TYPE::VULKAN:
-		VulkanAPI* vulkanAPI = static_cast<VulkanAPI*>(m_Renderer->GetGraphicsAPI());
+		VulkanAPI* vulkanAPI = m_Renderer->Get<VulkanAPI>();
 		m_Window->CreateSurface(vulkanAPI->GetInstance());
 		vulkanAPI->CreateSwapChain(m_Window.get());
 		break;
@@ -47,6 +47,17 @@ std::shared_ptr<Window> Engine::CreateWindow(const glm::vec2& size, const char* 
 
 
 	return m_Window;
+}
+
+std::shared_ptr<Mesh> Engine::LoadMesh(const std::vector<Vertex>& Vertices, const std::vector<uint16_t>& Indicies){
+	Core::API_TYPE apiType = Core::settings.GetAPIUsage();
+	switch (apiType) {
+	case Core::API_TYPE::VULKAN:
+		VulkanAPI* vulkanAPI = m_Renderer->Get<VulkanAPI>();
+		return std::make_shared<Mesh>(Vertices, Indicies, vulkanAPI);
+	}
+
+	return std::make_shared<Mesh>(Vertices, Indicies);
 }
 
 // Send in the path of the shader, TODO: Atm requires a "/" before the name, fix, the Shader FileName is also done like this, fix as well
@@ -66,7 +77,7 @@ std::shared_ptr<Shader> Engine::LoadShader(const char* path) {
 	Core::API_TYPE apiType = Core::settings.GetAPIUsage();
 	switch (apiType) {
 	case Core::API_TYPE::VULKAN:
-		VulkanAPI* vulkanAPI = static_cast<VulkanAPI*>(m_Renderer->GetGraphicsAPI());
+		VulkanAPI* vulkanAPI = m_Renderer->Get<VulkanAPI>();
 		shader = std::make_shared<Shader>(apiType, path, vulkanAPI->GetDevice());
 		if (shader->Loaded) {
 			VulkanShader* vulkanShader = shader->Get<VulkanShader>();
@@ -88,7 +99,7 @@ std::shared_ptr<Shader> Engine::GetShader(const char* fileName)
 	return Shader::GetShader(fileName);
 }
 
-void Engine::Draw(const SubScene& obj) {
+void Engine::Draw(SubScene& obj) {
 	m_Renderer->Draw(obj);
 }
 
