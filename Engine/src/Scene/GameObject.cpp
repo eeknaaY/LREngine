@@ -17,7 +17,7 @@ namespace LR {
 		m_Mesh = mesh;
 	}
 
-	std::shared_ptr<Shader> GameObject::GetShader() const
+	std::shared_ptr<Shader> GameObject::GetShader()
 	{
 		return m_Shader;
 	}

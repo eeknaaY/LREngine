@@ -12,7 +12,7 @@
       "displayName": "Windows x64",
       "generator": "Visual Studio 18 2026",
       "architecture": "x64",
-      "binaryDir": "${sourceDir}/out/build/${presetName}"
+      "binaryDir": "${sourceDir}/build/${presetName}"
     }
   ],
   "buildPresets": [

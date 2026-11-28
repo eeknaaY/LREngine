@@ -1,0 +1,1 @@
+#include "LR/ECS/Components/Component.hpp"

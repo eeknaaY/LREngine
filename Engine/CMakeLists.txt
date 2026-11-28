@@ -158,6 +158,16 @@ target_include_directories(LREngine
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
+target_link_libraries(LRLibrary PUBLIC
+    SDL3::SDL3
+    Vulkan::Vulkan
+    GPUOpen::VulkanMemoryAllocator
+    glm::glm
+    stb_image
+    imgui
+    fastgltf
+)
+
 target_link_libraries(LREngine PUBLIC
     SDL3::SDL3
     Vulkan::Vulkan
@@ -166,6 +176,11 @@ target_link_libraries(LREngine PUBLIC
     stb_image
     imgui
     fastgltf
+)
+
+set_target_properties(LREngine PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
 
 target_compile_definitions(LREngine

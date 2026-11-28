@@ -1,0 +1,1 @@
+#include "LR/ECS/ComponentRegistry.hpp"

@@ -17,7 +17,7 @@ namespace LR {
 
 		// Public since generic mesh is never supposed to be used by itself, it is just supposed to exist in Mesh.
 		std::vector<Vertex>m_Vertices;
-		std::vector<uint16_t>m_Indicies;
+		std::vector<uint16_t>m_Indices;
 
 	};
 }

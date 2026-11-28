@@ -340,7 +340,8 @@ void VulkanAPI::RecordCommandBuffer(uint32_t imageIndex, const vk::Pipeline& pip
 		VulkanMesh* vmesh = mesh->Get<VulkanMesh>();
 
 		commandBuffer.bindVertexBuffers(0, *vmesh->m_VertexBuffer, {0});
-		commandBuffer.draw(static_cast<uint32_t>(mesh->GetVertices().size()), 1, 0, 0);
+		commandBuffer.bindIndexBuffer(*vmesh->m_IndexBuffer, 0, vk::IndexType::eUint16);
+		commandBuffer.drawIndexed(static_cast<uint32_t>(mesh->GetIndices().size()), 1, 0, 0, 0);
 	}
 
 	commandBuffer.endRendering();

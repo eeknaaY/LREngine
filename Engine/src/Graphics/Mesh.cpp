@@ -42,9 +42,9 @@ namespace LR {
 		m_Mesh->m_Vertices = std::move(vertices);
 	}
 
-	void Mesh::SetIndicies(const std::vector<uint16_t>& indicies) {
+	void Mesh::SetIndices(const std::vector<uint16_t>& indices) {
 		if (!m_Mesh) return;
-		m_Mesh->m_Indicies = std::move(indicies);
+		m_Mesh->m_Indices = std::move(indices);
 	}
 
 	std::vector<Vertex> Mesh::GetVertices()
@@ -53,9 +53,9 @@ namespace LR {
 		return m_Mesh->m_Vertices;
 	}
 
-	std::vector<uint16_t> Mesh::GetIndicies()
+	std::vector<uint16_t> Mesh::GetIndices()
 	{
 		if (!m_Mesh) return std::vector<uint16_t>();
-		return m_Mesh->m_Indicies;
+		return m_Mesh->m_Indices;
 	}
 }

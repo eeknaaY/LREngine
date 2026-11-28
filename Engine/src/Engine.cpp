@@ -14,7 +14,8 @@ Engine::Engine(Core::API_TYPE Type) {
 	} 
 	catch (const std::exception& e) {
 		Core::settings.SetAPIUsage(Core::API_TYPE::HEADLESS);
-		Core::Debug::LogError("Unable to create SDL window. Proceeding as headless.");
+		Core::Debug::LogError("Error initializing engine. Proceeding as headless.");
+		Core::Debug::LogError(e.what());
 	}
 }
 
@@ -49,15 +50,15 @@ std::shared_ptr<Window> Engine::CreateWindow(const glm::vec2& size, const char* 
 	return m_Window;
 }
 
-std::shared_ptr<Mesh> Engine::LoadMesh(const std::vector<Vertex>& Vertices, const std::vector<uint16_t>& Indicies){
+std::shared_ptr<Mesh> Engine::LoadMesh(const std::vector<Vertex>& Vertices, const std::vector<uint16_t>& Indices){
 	Core::API_TYPE apiType = Core::settings.GetAPIUsage();
 	switch (apiType) {
 	case Core::API_TYPE::VULKAN:
 		VulkanAPI* vulkanAPI = m_Renderer->Get<VulkanAPI>();
-		return std::make_shared<Mesh>(Vertices, Indicies, vulkanAPI);
+		return std::make_shared<Mesh>(Vertices, Indices, vulkanAPI);
 	}
 
-	return std::make_shared<Mesh>(Vertices, Indicies);
+	return std::make_shared<Mesh>(Vertices, Indices);
 }
 
 // Send in the path of the shader, TODO: Atm requires a "/" before the name, fix, the Shader FileName is also done like this, fix as well
@@ -70,8 +71,11 @@ std::shared_ptr<Shader> Engine::LoadShader(const char* path) {
 	// For now return the shader if its already loaded, TODO: You should be able to create new instances of the same shader, will have to return a list of ptrs.
 	shader = Shader::GetShader(fileName);
 	if (shader) {
-		Core::Debug::Log(std::format("Retrieving cached shader: {}", fileName));
+		Core::Debug::Log(std::format("Retrieving Cached Shader ->\t{}", fileName));
 		return shader;
+	}
+	else {
+		Core::Debug::Log(std::format("Loading Shader ->\t{}", fileName));
 	}
 
 	Core::API_TYPE apiType = Core::settings.GetAPIUsage();
@@ -87,7 +91,6 @@ std::shared_ptr<Shader> Engine::LoadShader(const char* path) {
 	}
 
 	if (!shader) shader = std::make_shared<Shader>(apiType, path);
-	Core::Debug::Log(std::format("Loading new shader: {}", fileName));
 
 	Shader::CacheShader(shader);
 

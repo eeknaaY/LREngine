@@ -1,0 +1,38 @@
+message(STATUS "===== ENTERED TESTS CMAKE =====")
+include(FetchContent)
+
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.16.0.zip
+)
+
+FetchContent_MakeAvailable(googletest)
+
+file(GLOB TEST_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
+)
+
+message(STATUS "Found files: ${TEST_SOURCES}")
+
+foreach(FILE ${TEST_SOURCES})
+    message(STATUS "Test file: ${FILE}")
+endforeach()
+
+add_executable(unit_tests ${TEST_SOURCES})
+
+add_custom_command(TARGET unit_tests POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        -t "$<TARGET_FILE_DIR:unit_tests>"
+        "$<TARGET_RUNTIME_DLLS:unit_tests>"
+    COMMAND_EXPAND_LISTS
+    COMMENT "Copying runtime DLL dependencies"
+    VERBATIM
+)
+
+target_link_libraries(unit_tests PRIVATE
+    LRLibrary
+    GTest::gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(unit_tests)

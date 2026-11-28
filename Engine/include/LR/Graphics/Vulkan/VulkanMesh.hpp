@@ -22,6 +22,7 @@ public:
     uint32_t FindMemoryType(uint32_t typeFilter, const vk::PhysicalDeviceMemoryProperties& memProperties, const vk::MemoryPropertyFlags& properties);
 
     vk::BufferCreateInfo m_VertexBufferInfo;
+    vk::BufferCreateInfo m_IndexBufferInfo;
 
     vk::raii::Buffer m_VertexBuffer{ nullptr };
     vk::raii::DeviceMemory m_VertexMemory{ nullptr };

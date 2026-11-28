@@ -23,7 +23,7 @@ namespace LR {
 		if (GetShader(shader->FileName)) return;
 
 		m_LoadedShaders.insert(shader);
-		Core::Debug::Log(std::format("Caching shader: {}", shader->FileName));
+		Core::Debug::Log(std::format("Caching Shader ->\t{}", shader->FileName));
 	}
 
 	std::shared_ptr<Shader> Shader::GetShader(const char* fileName)
@@ -68,7 +68,7 @@ namespace LR {
 		}
 		catch (const std::exception& e)
 		{
-			std::cerr << "ERROR: " << e.what() << '\n';
+			Core::Debug::LogError(e.what());
 		}
 
 		return nullptr;

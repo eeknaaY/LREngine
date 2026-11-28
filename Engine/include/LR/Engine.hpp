@@ -11,8 +11,6 @@
 #include "Scene/Camera.hpp"
 #include "Core/Core.hpp"
 
-#include <unordered_map>
-
 namespace LR {
 
 class Engine {

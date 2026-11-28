@@ -22,9 +22,9 @@ namespace LR {
 		void Bind();
 
 		void SetVertices(const std::vector<Vertex>& vertices);
-		void SetIndicies(const std::vector<uint16_t>& indicies);
+		void SetIndices(const std::vector<uint16_t>& indices);
 		std::vector<Vertex> GetVertices();
-		std::vector<uint16_t> GetIndicies();
+		std::vector<uint16_t> GetIndices();
 
 	private:
 		GenericMesh* m_Mesh = nullptr;

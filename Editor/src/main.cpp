@@ -7,37 +7,37 @@ int main() {
 	std::shared_ptr<LR::Shader> shader = engine.LoadShader("../../Engine/shaders/shader.spv");
 
 	LR::GameObject obj = LR::GameObject();
-	LR::GameObject obj2 = LR::GameObject();
-	obj2.SetShader(shader);					// Eventually obj.SetComponent<Shader>() = shader;?
 	obj.SetShader(shader);					// Eventually obj.SetComponent<Shader>() = shader;?
 	
-	std::vector<LR::Vertex> vertices = {
-		{{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-		{{0.0f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
-	};
-
-	std::vector<LR::Vertex> vertices2 = {
+	const std::vector<LR::Vertex> vertices = {
 		{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-		{{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
-		{{-1.0f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}}
+		{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}}
 	};
 
-	std::vector<uint16_t> indicies = { 0, 1, 2 };
+	const std::vector<uint16_t> indices = {
+		0, 1, 2, 2, 3, 0
+	};
 
-	std::shared_ptr<LR::Mesh> mesh = engine.LoadMesh(vertices, indicies);
-	std::shared_ptr<LR::Mesh> mesh2 = engine.LoadMesh(vertices2, indicies);
+	std::shared_ptr<LR::Mesh> mesh = engine.LoadMesh(vertices, indices);
 
 	obj.SetMesh(mesh);
-	obj2.SetMesh(mesh2);
 
 	LR::SubScene subScene = LR::SubScene();
 	subScene.AddGameObject(obj);			// Eventually AddGameObject() to a Scene?
-	subScene.AddGameObject(obj2);	
 
+	std::shared_ptr<LR::Components::Transform> transform = obj.AddComponent<LR::Components::Transform>();
+	transform->Position = glm::vec3(1, 0, 0);
+
+	// TODO: Currently only 1 component architecture can exist, fix
+	// TODO: Vulkan buffer pre-write buffer thingies
+	std::shared_ptr<LR::Components::Transform> transform_ = obj.GetComponent<LR::Components::Transform>();
+	LR::Core::Debug::Log(std::format("Position Value ->\t{}", transform_->Position.x));
 
 	while (engine.IsActive()) {
 		engine.Draw(subScene);
+
 
 
 		engine.Update();
